@@ -28,6 +28,15 @@ void Destructible::die(Actor *owner) {
 	engine.sendToBack(owner);
 }
 
+float Destructible::heal(float amount) {
+   hp += amount;
+   if ( hp > maxHp ) {
+       amount -= hp-maxHp;
+       hp=maxHp;
+   }
+   return amount;
+}
+
 MonsterDestructible::MonsterDestructible(float maxHp, float defense, const char *corpseName) :
 	Destructible(maxHp,defense,corpseName) {
 }
