@@ -16,12 +16,12 @@ public :
       if ( node->isLeaf() ) {    
          int x,y,w,h;
          // dig a room
-         TCODRandom *rng=TCODRandom::getInstance();
-         w=rng->getInt(ROOM_MIN_SIZE, node->w-2);
-         h=rng->getInt(ROOM_MIN_SIZE, node->h-2);
-         x=rng->getInt(node->x+1, node->x+node->w-w-1);
-         y=rng->getInt(node->y+1, node->y+node->h-h-1);
-         map.createRoom(roomNum == 0, x, y, x+w-1, y+h-1);
+         bool withActors=(bool)userData;
+         w=map.rng->getInt(ROOM_MIN_SIZE, node->w-2);
+         h=map.rng->getInt(ROOM_MIN_SIZE, node->h-2);
+         x=map.rng->getInt(node->x+1, node->x+node->w-w-1);
+         y=map.rng->getInt(node->y+1, node->y+node->h-h-1);
+         map.createRoom(roomNum == 0, x, y, x+w-1, y+h-1, withActors);
          if ( roomNum != 0 ) {
              // dig a corridor from last room
              map.dig(lastx,lasty,x+w/2,lasty);
@@ -35,13 +35,19 @@ public :
     }
 };
 
-Map::Map(int width, int height) : width(width),height(height) {
+Map::Map(int width, int height) 
+   : width(width),height(height) {
+   seed=TCODRandom::getInstance()->getInt(0,0x7FFFFFFF);
+}
+
+void Map::init(bool withActors) {
+   rng = new TCODRandom(seed, TCOD_RNG_CMWC);
     tiles=new Tile[width*height];
     map=new TCODMap(width,height);
     TCODBsp bsp(0,0,width,height);
-    bsp.splitRecursive(NULL,8,ROOM_MAX_SIZE,ROOM_MAX_SIZE,1.5f,1.5f);
+    bsp.splitRecursive(rng,8,ROOM_MAX_SIZE,ROOM_MAX_SIZE,1.5f,1.5f);
     BspListener listener(*this);
-    bsp.traverseInvertedLevelOrder(&listener,NULL);
+    bsp.traverseInvertedLevelOrder(&listener,(void *)withActors);
 }
 
 Map::~Map() {
@@ -68,12 +74,12 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 }
 
 void Map::addMonster(int x, int y) {
-    TCODRandom *rng=TCODRandom::getInstance();
+   TCODRandom *rng=TCODRandom::getInstance();
     if ( rng->getInt(0,100) < 80 ) {
         // create an orc
         Actor *orc = new Actor(x,y,'o',"orc",
             TCODColor::desaturatedGreen);
-        orc->destructible = new MonsterDestructible(10,0,"dead orc");
+        orc->destructible = new MonsterDestructible(10,0,"dead orc",35);
         orc->attacker = new Attacker(3);
         orc->ai = new MonsterAi();
         engine.actors.push(orc);
@@ -81,7 +87,7 @@ void Map::addMonster(int x, int y) {
         // create a troll
         Actor *troll = new Actor(x,y,'T',"troll",
              TCODColor::darkerGreen);
-        troll->destructible = new MonsterDestructible(16,1,"troll carcass");
+        troll->destructible = new MonsterDestructible(16,1,"troll carcass",100);
         troll->attacker = new Attacker(4);
         troll->ai = new MonsterAi();
         engine.actors.push(troll);
@@ -92,19 +98,19 @@ void Map::addItem(int x, int y) {
    TCODRandom *rng=TCODRandom::getInstance();
    int dice = rng->getInt(0,100);
    if ( dice < 70 ) {
-       // create a health potion
-       Actor *healthPotion=new Actor(x,y,'!',"health potion",
-           TCODColor::violet);
-       healthPotion->blocks=false;
-       healthPotion->pickable=new Healer(4);
-       engine.actors.push(healthPotion);
+      // create a health potion
+      Actor *healthPotion=new Actor(x,y,'!',"health potion",
+         TCODColor::violet);
+      healthPotion->blocks=false;
+      healthPotion->pickable=new Healer(4);
+      engine.actors.push(healthPotion);
    } else if ( dice < 70+10 ) {
-       // create a scroll of lightning bolt 
-       Actor *scrollOfLightningBolt=new Actor(x,y,'#',"scroll of lightning bolt",
-           TCODColor::lightYellow);
-       scrollOfLightningBolt->blocks=false;
-       scrollOfLightningBolt->pickable=new LightningBolt(5,20);
-       engine.actors.push(scrollOfLightningBolt);
+      // create a scroll of lightning bolt 
+      Actor *scrollOfLightningBolt=new Actor(x,y,'#',"scroll of lightning bolt",
+         TCODColor::lightYellow);
+      scrollOfLightningBolt->blocks=false;
+      scrollOfLightningBolt->pickable=new LightningBolt(5,20);
+      engine.actors.push(scrollOfLightningBolt);
    } else if ( dice < 70+10+10 ) {
       // create a scroll of fireball
       Actor *scrollOfFireball=new Actor(x,y,'#',"scroll of fireball",
@@ -122,8 +128,11 @@ void Map::addItem(int x, int y) {
    }
 }
 
-void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
+void Map::createRoom(bool first, int x1, int y1, int x2, int y2, bool withActors) {
     dig (x1,y1,x2,y2);
+    if (!withActors) {
+      return;
+    }      
     if ( first ) {
         // put the player in the first room
         engine.player->x=(x1+x2)/2;
@@ -135,9 +144,9 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
       while (nbMonsters > 0) {
           int x=rng->getInt(x1,x2);
           int y=rng->getInt(y1,y2);
-          if ( canWalk(x,y) ) {
-              addMonster(x,y);
-          }
+         if ( canWalk(x,y) ) {
+            addMonster(x,y);
+         }
           nbMonsters--;
       }
       // add items
@@ -145,11 +154,14 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
       while (nbItems > 0) {
           int x=rng->getInt(x1,x2);
           int y=rng->getInt(y1,y2);
-          if ( canWalk(x,y) ) {
+         if ( canWalk(x,y) ) {
             addItem(x,y);
-          }
+         }
           nbItems--;
       }
+      // set stairs position
+      engine.stairs->x=(x1+x2)/2;
+      engine.stairs->y=(y1+y2)/2;
     }
 }
 
