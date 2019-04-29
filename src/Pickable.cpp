@@ -68,11 +68,13 @@ bool Confuser::use(Actor *owner, Actor *wearer) {
 	engine.gui->message(TCODColor::cyan, "Left-click an enemy to confuse it,\nor right-click to cancel.");
 	int x,y;
 	if (! engine.pickATile(&x,&y,range)) {
+		engine.gui->message(TCODColor::cyan, "Whut?");
 		return false;
 	}
 
 	Actor *actor=engine.getActor(x,y);
 	if (! actor ) {
+		engine.gui->message(TCODColor::cyan, "Not an enemy.");
 		return false;
 	}
 	// confuse the monster for <nbTurns> turns
@@ -91,7 +93,10 @@ bool Fireball::use(Actor *owner, Actor *wearer) {
 	engine.gui->message(TCODColor::cyan, "Left-click a target tile for the fireball,\nor right-click to cancel.");
 	int x,y;
 	if (! engine.pickATile(&x,&y)) {
+		engine.gui->message(TCODColor::cyan, "Pick tile?");
 		return false;
+	} else {
+		engine.gui->message(TCODColor::cyan, "Pick tile??? yes?");
 	}
 	// burn everything in <range> (including player)
 	engine.gui->message(TCODColor::orange,"The fireball explodes, burning everything within %g tiles!",range);

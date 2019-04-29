@@ -4,7 +4,7 @@
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),
   player(NULL),map(NULL),fovRadius(10),
   screenWidth(screenWidth),screenHeight(screenHeight),level(1) {
-    TCODConsole::initRoot(screenWidth,screenHeight,"libtcod C++ tutorial",false);
+    TCODConsole::initRoot(screenWidth,screenHeight,"Rogue Hacker",false);
     gui = new Gui();
 }
 
@@ -22,7 +22,7 @@ void Engine::init() {
     map = new Map(80,43);
     map->init(true);
     gui->message(TCODColor::red, 
-      "Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
+      "Rogue Hacker!\n  Can you discover the secrets here?");
     gameStatus=STARTUP;
 }
 
@@ -115,6 +115,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
   while ( !TCODConsole::isWindowClosed() ) {
     render();
     // highlight the possible range
+    gui->message(TCODColor::lightViolet,"highlight range.");
     for (int cx=0; cx < map->width; cx++) {
       for (int cy=0; cy < map->height; cy++) {
         if ( map->isInFov(cx,cy)
@@ -125,11 +126,13 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
         }
       }
     }
-    TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
+    TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse,true);
+
     if ( map->isInFov(mouse.cx,mouse.cy)
       && ( maxRange == 0 || player->getDistance(mouse.cx,mouse.cy) <= maxRange )) {
       TCODConsole::root->setCharBackground(mouse.cx,mouse.cy,TCODColor::white);
       if ( mouse.lbutton_pressed ) {
+        gui->message(TCODColor::lightViolet,"Mouse left pressed");
         *x=mouse.cx;
         *y=mouse.cy;
         return true;
@@ -147,7 +150,7 @@ void Engine::nextLevel() {
   level++;
   gui->message(TCODColor::lightViolet,"You take a moment to rest, and recover your strength.");
   player->destructible->heal(player->destructible->maxHp/2);
-  gui->message(TCODColor::red,"After a rare moment of peace, you descend\ndeeper into the heart of the dungeon...");
+  gui->message(TCODColor::red,"You descend\ndeeper into the secret lab.");
     delete map;
     // delete all actors but player and stairs
     for (Actor **it=actors.begin(); it!=actors.end(); it++) {

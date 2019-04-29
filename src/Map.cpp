@@ -2,7 +2,7 @@
 
 static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
-static const int MAX_ROOM_MONSTERS = 3;
+static const int MAX_ROOM_MONSTERS = 4;
 static const int MAX_ROOM_ITEMS = 2;
 
 class BspListener : public ITCODBspCallback {
@@ -74,23 +74,30 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 }
 
 void Map::addMonster(int x, int y) {
-   TCODRandom *rng=TCODRandom::getInstance();
-    if ( rng->getInt(0,100) < 80 ) {
-        // create an orc
-        Actor *orc = new Actor(x,y,'o',"orc",
-            TCODColor::desaturatedGreen);
-        orc->destructible = new MonsterDestructible(10,0,"dead orc",35);
-        orc->attacker = new Attacker(3);
-        orc->ai = new MonsterAi();
-        engine.actors.push(orc);
+    TCODRandom *dice=TCODRandom::getInstance();
+    int monster_type = dice->getInt(0,20);
+    if ( monster_type < 4 && engine.level > 3 ) {
+      // create a fucking scientist
+      // this guy can do some range also
+      Actor *scientist = new Actor(x,y,'S', "Scientist", TCODColor::chartreuse);
+      scientist->destructible = new MonsterDestructible(20,2,"dead scientist",150);
+      scientist->attacker = new Attacker(5);
+      scientist->ai = new MonsterAi();
+      engine.actors.push(scientist);
+    } else if( monster_type < 10) {
+        // create a robot
+        Actor *robot = new Actor(x,y,'R',"robot",TCODColor::darkerGreen);
+        robot->destructible = new MonsterDestructible(16,1,"robot carcass",100);
+        robot->attacker = new Attacker(4);
+        robot->ai = new MonsterAi();
+        engine.actors.push(robot);
     } else {
-        // create a troll
-        Actor *troll = new Actor(x,y,'T',"troll",
-             TCODColor::darkerGreen);
-        troll->destructible = new MonsterDestructible(16,1,"troll carcass",100);
-        troll->attacker = new Attacker(4);
-        troll->ai = new MonsterAi();
-        engine.actors.push(troll);
+        // create an minion
+        Actor *minion = new Actor(x,y,'o',"minion",TCODColor::desaturatedGreen);
+        minion->destructible = new MonsterDestructible(10,0,"dead minion",35);
+        minion->attacker = new Attacker(3);
+        minion->ai = new MonsterAi();
+        engine.actors.push(minion);
     }
 }
 
