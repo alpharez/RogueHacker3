@@ -4,6 +4,8 @@
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),
   player(NULL),map(NULL),fovRadius(10),
   screenWidth(screenWidth),screenHeight(screenHeight),level(1) {
+    TCODConsole::setCustomFont("arial10x10.png",TCOD_FONT_LAYOUT_TCOD);
+    //TCODConsole::setCustomFont("prestige10x10_gs_tc.png",TCOD_FONT_LAYOUT_TCOD);
     TCODConsole::initRoot(screenWidth,screenHeight,"Rogue Hacker",false);
     gui = new Gui();
 }
@@ -21,8 +23,7 @@ void Engine::init() {
     actors.push(stairs);
     map = new Map(80,43);
     map->init(true);
-    gui->message(TCODColor::red, 
-      "Rogue Hacker!\n  Can you discover the secrets here?");
+    gui->message(TCODColor::lime,"This is a secured area.\nUnauthorized Personnel will be prosecuted!");
     gameStatus=STARTUP;
 }
 
@@ -115,7 +116,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
   while ( !TCODConsole::isWindowClosed() ) {
     render();
     // highlight the possible range
-    gui->message(TCODColor::lightViolet,"highlight range.");
+    //gui->message(TCODColor::lightViolet,"highlight range.");
     for (int cx=0; cx < map->width; cx++) {
       for (int cy=0; cy < map->height; cy++) {
         if ( map->isInFov(cx,cy)

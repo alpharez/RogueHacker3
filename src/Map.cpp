@@ -78,22 +78,22 @@ void Map::addMonster(int x, int y) {
     int monster_type = dice->getInt(0,20);
     if ( monster_type < 4 && engine.level > 3 ) {
       // create a fucking scientist
-      // this guy can do some range also
-      Actor *scientist = new Actor(x,y,'S', "Scientist", TCODColor::chartreuse);
+      // TODO: this guy can do some range also
+      Actor *scientist = new Actor(x,y,'S', "Scientist", TCODColor::orange);
       scientist->destructible = new MonsterDestructible(20,2,"dead scientist",150);
       scientist->attacker = new Attacker(5);
       scientist->ai = new MonsterAi();
       engine.actors.push(scientist);
     } else if( monster_type < 10) {
         // create a robot
-        Actor *robot = new Actor(x,y,'R',"robot",TCODColor::darkerGreen);
+        Actor *robot = new Actor(x,y,'R',"robot",TCODColor::blue);
         robot->destructible = new MonsterDestructible(16,1,"robot carcass",100);
         robot->attacker = new Attacker(4);
         robot->ai = new MonsterAi();
         engine.actors.push(robot);
     } else {
         // create an minion
-        Actor *minion = new Actor(x,y,'o',"minion",TCODColor::desaturatedGreen);
+        Actor *minion = new Actor(x,y,'o',"minion",TCODColor::yellow);
         minion->destructible = new MonsterDestructible(10,0,"dead minion",35);
         minion->attacker = new Attacker(3);
         minion->ai = new MonsterAi();
@@ -106,29 +106,25 @@ void Map::addItem(int x, int y) {
    int dice = rng->getInt(0,100);
    if ( dice < 70 ) {
       // create a health potion
-      Actor *healthPotion=new Actor(x,y,'!',"health potion",
-         TCODColor::violet);
+      Actor *healthPotion=new Actor(x,y,'!',"health potion",TCODColor::violet);
       healthPotion->blocks=false;
       healthPotion->pickable=new Healer(4);
       engine.actors.push(healthPotion);
    } else if ( dice < 70+10 ) {
       // create a scroll of lightning bolt 
-      Actor *scrollOfLightningBolt=new Actor(x,y,'#',"scroll of lightning bolt",
-         TCODColor::lightYellow);
+      Actor *scrollOfLightningBolt=new Actor(x,y,'#',"scroll of lightning bolt",TCODColor::lightYellow);
       scrollOfLightningBolt->blocks=false;
       scrollOfLightningBolt->pickable=new LightningBolt(5,20);
       engine.actors.push(scrollOfLightningBolt);
    } else if ( dice < 70+10+10 ) {
       // create a scroll of fireball
-      Actor *scrollOfFireball=new Actor(x,y,'#',"scroll of fireball",
-         TCODColor::lightYellow);
+      Actor *scrollOfFireball=new Actor(x,y,'#',"scroll of fireball",TCODColor::amber);
       scrollOfFireball->blocks=false;
       scrollOfFireball->pickable=new Fireball(3,12);
       engine.actors.push(scrollOfFireball);
    } else {
       // create a scroll of confusion
-      Actor *scrollOfConfusion=new Actor(x,y,'#',"scroll of confusion",
-         TCODColor::lightYellow);
+      Actor *scrollOfConfusion=new Actor(x,y,'#',"scroll of confusion",TCODColor::lightYellow);
       scrollOfConfusion->blocks=false;
       scrollOfConfusion->pickable=new Confuser(10,8);
       engine.actors.push(scrollOfConfusion);
@@ -213,11 +209,10 @@ void Map::computeFov() {
 }
 
 void Map::render() const {
-    static const TCODColor darkWall(0,0,100);
-    static const TCODColor darkGround(50,50,150);
-   static const TCODColor lightWall(130,110,50);
-   static const TCODColor lightGround(200,180,50);
-
+  static const TCODColor darkWall(0,100,0);
+  static const TCODColor darkGround(50,150,50);
+  static const TCODColor lightWall(50,130,1100);
+  static const TCODColor lightGround(80,200,150);
    for (int x=0; x < width; x++) {
        for (int y=0; y < height; y++) {
            if ( isInFov(x,y) ) {

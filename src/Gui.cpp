@@ -33,10 +33,9 @@ void Gui::render() {
 	// draw the XP bar
 	PlayerAi *ai=(PlayerAi *)engine.player->ai;
 	char xpTxt[128];
-	sprintf(xpTxt,"XP(%d)",ai->xpLevel);
+	sprintf(xpTxt,"XP lvl %d",ai->xpLevel);
 	renderBar(1,5,BAR_WIDTH,xpTxt,engine.player->destructible->xp,
-		ai->getNextLevelXp(),
-		TCODColor::lightViolet,TCODColor::darkerViolet);
+		ai->getNextLevelXp(),TCODColor::lightViolet,TCODColor::darkerViolet);
 
 	// draw the message log
 	int y=1;
