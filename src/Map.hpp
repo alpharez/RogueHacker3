@@ -1,14 +1,17 @@
 struct Tile {
     bool explored; // has the player already seen this tile ?
-    Tile() : explored(false) {}
+    unsigned int scent; // amount of player scent on this tile
+    Tile() : explored(false),scent(0) {}
 };
  
 class Map : public Persistent {
 public :
     int width,height;
+    unsigned int currentScentValue;
+    unsigned int getScent(int x, int y) const;
  
     Map(int width, int height);
-    ~Map();
+    virtual ~Map();
     bool isWall(int x, int y) const;
 	bool isInFov(int x, int y) const;
     bool isExplored(int x, int y) const;

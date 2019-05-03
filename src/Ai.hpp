@@ -1,5 +1,10 @@
+// after 20 turns, the monster cannot smell the scent anymore
+static const int SCENT_THRESHOLD=20;
+
 class Ai : public Persistent {
 public :
+	Ai();
+	virtual ~Ai();
 	virtual void update(Actor *owner)=0;
 	static Ai *create (TCODZip &zip);
 protected :
@@ -11,11 +16,12 @@ protected :
 class MonsterAi : public Ai {
 public :
 	MonsterAi();
+	~MonsterAi();
 	void update(Actor *owner);
 	void load(TCODZip &zip);
 	void save(TCODZip &zip);
 protected :
-	int moveCount;
+	//int moveCount;
 
 	void moveOrAttack(Actor *owner, int targetx, int targety);
 };
@@ -23,6 +29,7 @@ protected :
 class ConfusedMonsterAi : public Ai {
 public :
 	ConfusedMonsterAi(int nbTurns, Ai *oldAi);
+	virtual ~ConfusedMonsterAi();
 	void update(Actor *owner);
 	void load(TCODZip &zip);
 	void save(TCODZip &zip);

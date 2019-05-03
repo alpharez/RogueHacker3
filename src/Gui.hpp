@@ -30,7 +30,7 @@ public :
 	Menu menu;
 
 	Gui();
-	~Gui();
+	virtual ~Gui();
 	void render();
 	void message(const TCODColor &col, const char *text, ...);
 	void load(TCODZip &zip);

@@ -6,6 +6,9 @@ static const int CRIT_FACTOR = 2;
 Attacker::Attacker(float power) : power(power) {
 }
 
+Attacker::~Attacker() {
+}
+
 void Attacker::attack(Actor *owner, Actor *target) {
 	// roll dice to see if critical hit
 	TCODRandom *rng=TCODRandom::getInstance();

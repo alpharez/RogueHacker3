@@ -16,6 +16,7 @@ Following Roguelike tutorial using c++ on Mac OSX
 - make alarms
 - items
 - upgrade armor and weapons.
+- Make vision bigger from item or upgrade
 
 ## Mouse issue
 

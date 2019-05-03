@@ -1,60 +1,59 @@
 #include <math.h>
 #include "main.hpp"
 
-Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),
-  player(NULL),map(NULL),fovRadius(10),
-  screenWidth(screenWidth),screenHeight(screenHeight),level(1) {
-    TCODConsole::setCustomFont("arial10x10.png",TCOD_FONT_LAYOUT_TCOD);
-    //TCODConsole::setCustomFont("prestige10x10_gs_tc.png",TCOD_FONT_LAYOUT_TCOD);
-    TCODConsole::initRoot(screenWidth,screenHeight,"Rogue Hacker",false);
-    gui = new Gui();
+Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),player(NULL),map(NULL),fovRadius(10),screenWidth(screenWidth),screenHeight(screenHeight),level(1) {
+  TCODConsole::setCustomFont("arial10x10.png",TCOD_FONT_LAYOUT_TCOD);
+  //TCODConsole::setCustomFont("prestige10x10_gs_tc.png",TCOD_FONT_LAYOUT_TCOD);
+  TCODConsole::initRoot(screenWidth,screenHeight,"Rogue Hacker",false);
+  gui = new Gui();
 }
 
 void Engine::init() {
-    player = new Actor(40,25,'@',"player",TCODColor::white);
-    player->destructible=new PlayerDestructible(30,2,"your cadaver");
-    player->attacker=new Attacker(5);
-    player->ai = new PlayerAi();
-    player->container = new Container(26);
-    actors.push(player);
-    stairs = new Actor(0,0,'>',"stairs",TCODColor::white);
-    stairs->blocks=false;
-    stairs->fovOnly=false;
-    actors.push(stairs);
-    map = new Map(80,43);
-    map->init(true);
-    gui->message(TCODColor::lime,"This is a secured area.\nUnauthorized Personnel will be prosecuted!");
-    gameStatus=STARTUP;
+  player = new Actor(40,25,'@',"player",TCODColor::white);
+  player->destructible=new PlayerDestructible(30,2,"your cadaver");
+  player->attacker=new Attacker(5);
+  player->ai = new PlayerAi();
+  player->container = new Container(26);
+  actors.push(player);
+  stairs = new Actor(0,0,'>',"stairs",TCODColor::white);
+  stairs->blocks=false;
+  stairs->fovOnly=false;
+  actors.push(stairs);
+  map = new Map(80,43);
+  map->init(true);
+  gui->message(TCODColor::lime,"This is a secured area.\nUnauthorized Personnel will be prosecuted!");
+  gameStatus=STARTUP;
 }
 
 Engine::~Engine() {
   term();
-    delete gui;
+  delete gui;
 }
 
 void Engine::term() {
-    actors.clearAndDelete();
-    if ( map ) delete map;
-    gui->clear();
+  actors.clearAndDelete();
+  if ( map ) delete map;
+  gui->clear();
 }
 
 void Engine::update() {
   if ( gameStatus == STARTUP ) map->computeFov();
-    gameStatus=IDLE;
-    TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
-    if ( lastKey.vk == TCODK_ESCAPE ) {
-      save();
-      load(true);
-    }
-    player->update();
-    if ( gameStatus == NEW_TURN ) {
-      for (Actor **iterator=actors.begin(); iterator != actors.end();
-          iterator++) {
-          Actor *actor=*iterator;
-          if ( actor != player ) {
-              actor->update();
-          }
+  gameStatus=IDLE;
+  TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
+  if ( lastKey.vk == TCODK_ESCAPE ) {
+    save();
+    load(true);
+  }
+  player->update();
+  if ( gameStatus == NEW_TURN ) {
+    map->currentScentValue++;
+    for (Actor **iterator=actors.begin(); iterator != actors.end();
+      iterator++) {
+      Actor *actor=*iterator;
+      if ( actor != player ) {
+        actor->update();
       }
+    }
   }
 }
 
@@ -64,13 +63,11 @@ void Engine::render() {
   map->render();
   // draw the actors
   for (Actor **iterator=actors.begin();
-      iterator != actors.end(); iterator++) {
+    iterator != actors.end(); iterator++) {
     Actor *actor=*iterator;
-    if ( actor != player 
-      && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-        || map->isInFov(actor->x,actor->y)) ) {
-          actor->render();
-      }
+    if ( actor != player && ((!actor->fovOnly && map->isExplored(actor->x,actor->y)) || map->isInFov(actor->x,actor->y)) ) {
+      actor->render();
+    }
   }
   player->render();
   // show the player's stats
@@ -84,10 +81,9 @@ void Engine::sendToBack(Actor *actor) {
 
 Actor *Engine::getActor(int x, int y) const {
   for (Actor **iterator=actors.begin();
-      iterator != actors.end(); iterator++) {
+    iterator != actors.end(); iterator++) {
     Actor *actor=*iterator;
-    if ( actor->x == x && actor->y ==y && actor->destructible
-      && ! actor->destructible->isDead()) {
+    if ( actor->x == x && actor->y ==y && actor->destructible && ! actor->destructible->isDead()) {
       return actor;
     }
   }
@@ -98,10 +94,9 @@ Actor *Engine::getClosestMonster(int x, int y, float range) const {
   Actor *closest=NULL;
   float bestDistance=1E6f;
   for (Actor **iterator=actors.begin();
-      iterator != actors.end(); iterator++) {
+    iterator != actors.end(); iterator++) {
     Actor *actor=*iterator;
-    if ( actor != player && actor->destructible 
-      && !actor->destructible->isDead() ) {
+    if ( actor != player && actor->destructible && !actor->destructible->isDead() ) {
       float distance=actor->getDistance(x,y);
       if ( distance < bestDistance && ( distance <= range || range == 0.0f ) ) {
         bestDistance=distance;
@@ -119,8 +114,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
     //gui->message(TCODColor::lightViolet,"highlight range.");
     for (int cx=0; cx < map->width; cx++) {
       for (int cy=0; cy < map->height; cy++) {
-        if ( map->isInFov(cx,cy)
-          && ( maxRange == 0 || player->getDistance(cx,cy) <= maxRange) ) {
+        if ( map->isInFov(cx,cy) && ( maxRange == 0 || player->getDistance(cx,cy) <= maxRange) ) {
           TCODColor col=TCODConsole::root->getCharBackground(cx,cy);
           col = col * 1.2f;
           TCODConsole::root->setCharBackground(cx,cy,col);
@@ -129,8 +123,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
     }
     TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse,true);
 
-    if ( map->isInFov(mouse.cx,mouse.cy)
-      && ( maxRange == 0 || player->getDistance(mouse.cx,mouse.cy) <= maxRange )) {
+    if ( map->isInFov(mouse.cx,mouse.cy) && ( maxRange == 0 || player->getDistance(mouse.cx,mouse.cy) <= maxRange )) {
       TCODConsole::root->setCharBackground(mouse.cx,mouse.cy,TCODColor::white);
       if ( mouse.lbutton_pressed ) {
         gui->message(TCODColor::lightViolet,"Mouse left pressed");
@@ -151,17 +144,17 @@ void Engine::nextLevel() {
   level++;
   gui->message(TCODColor::lightViolet,"You take a moment to rest, and recover your strength.");
   player->destructible->heal(player->destructible->maxHp/2);
-  gui->message(TCODColor::red,"You descend\ndeeper into the secret lab.");
-    delete map;
-    // delete all actors but player and stairs
-    for (Actor **it=actors.begin(); it!=actors.end(); it++) {
-      if ( *it != player && *it != stairs ) {
-        delete *it;
-        it = actors.remove(it);
-      }
+  gui->message(TCODColor::red,"You go\ndeeper into the secret lab.");
+  delete map;
+  // delete all actors but player and stairs
+  for (Actor **it=actors.begin(); it!=actors.end(); it++) {
+    if ( *it != player && *it != stairs ) {
+      delete *it;
+      it = actors.remove(it);
     }
-    // create a new map
-    map = new Map(80,43);
-    map->init(true);
+  }
+  // create a new map
+  map = new Map(80,43);
+  map->init(true);
   gameStatus=STARTUP;    
 }
